@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:movie_test/controllers/search_controller.dart';
 import 'package:movie_test/models/movie.dart';
 
 
@@ -13,23 +15,23 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  List<Movie>? movieList;
-  bool isSearching = false;
-  bool didSearched = false;
-  API api = API();
+  // List<Movie>? movieList;
+  // bool isSearching = false;
+  // bool didSearched = false;
+  final SearchController c = Get.put(SearchController());
+
+  @override
+  void initState() {
+    super.initState();
+    c.functionSearch();
+    c.resetMovie();
+  }
 
   searchMovie(query) {
-    setState(() {
-      isSearching = true;
-      didSearched = true;
-    });
-    api.getSearchMovies(query).then((value) {
-      setState(() {
-        movieList = value;
-        isSearching = false;
-      });
-    });
+    c.sucessSearch();
+    c.getSearchMovie(query);
   }
+
 
   Widget _movieSearchList() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,9 +50,9 @@ class _SearchPageState extends State<SearchPage> {
               crossAxisSpacing: 5,
               childAspectRatio: 0.48,
             ),
-            itemCount: movieList!.length,
+            itemCount: c.movieList.length,
             itemBuilder: (_, index) {
-              Movie movie = movieList![index];
+              Movie movie = c.movieList[index];
               return MovieItem(tag: "search", movie: movie);
             }),
       ),
@@ -73,19 +75,19 @@ class _SearchPageState extends State<SearchPage> {
                 searchMovie(value);
               },
             )),
-        body: SingleChildScrollView(
-          child: !didSearched
-              ? const SizedBox(
-              height: 50, child: Center(child: Text("Search movies")))
-              : Column(
-            children: [
-              movieList == null
-                  ? isSearching
-                  ? const Center(child: CircularProgressIndicator())
-                  : Container()
-                  : _movieSearchList(),
-            ],
-          ),
-        ));
+        body: Obx(() {
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                c.movieList.isEmpty
+                    ? c.isSearching.value
+                    ? const Center(child: CircularProgressIndicator())
+                    : Container()
+                    : _movieSearchList(),
+              ],
+            ),
+          );
+        })
+    );
   }
 }
